@@ -468,11 +468,11 @@ function detectPoseInRealTime(video, net) {
         if (guiState.output.showSurfaces) {
           drawSurfaces(keypoints, minPartConfidence, d3_output);
         }
-        if (guiState.output.showPoints) {
-          drawKeypoints(keypoints, minPartConfidence, d3_output);
-        }
         if (guiState.output.showSkeleton) {
           drawSkeleton(keypoints, minPartConfidence, d3_output);
+        }
+        if (guiState.output.showPoints) {
+          drawKeypoints(keypoints, minPartConfidence, d3_output);
         }
         if (guiState.output.showBoundingBox) {
           drawBoundingBox(keypoints, d3_output);

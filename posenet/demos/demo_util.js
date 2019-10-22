@@ -99,23 +99,28 @@ export function drawSegment([ay, ax], [by, bx], image, selection) {
       .attr('transform', `translate(${ax} ${ay}) scale(${scale}) rotate(${angle})`);
 }
 
-export function drawSurface([ay, ax], [by, bx], [cy, cx], [dy, dx], image, selection) {
+export function drawSurface(keypoints, imageInfo, selection) {
+  const [ay, ax] = toTuple(keypoints[0].position);
+  const [by, bx] = toTuple(keypoints[1].position);
+  const [cy, cx] = toTuple(keypoints[2].position);
+  const [dy, dx] = toTuple(keypoints[3].position);
+
   const nx = (ax + bx) / 2;
   const ny = (ay + by) / 2;
   const px = (cx + dx) / 2;
   const py = (cy + dy) / 2;
 
-  const scaleX = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / 400.0;
-  const scaleY = Math.sqrt((nx - px) * (nx - px) + (ny - py) * (ny - py)) / 800.0;
+  const scaleX = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / imageInfo.width;
+  const scaleY = Math.sqrt((nx - px) * (nx - px) + (ny - py) * (ny - py)) / imageInfo.height;
   const angle = Math.atan2(by-ay, bx-ax) * 180 / Math.PI;
 
-  selection.append('image')
+  const surf = selection.append('image')
       .classed('overlay_item', true)
-      .attr('x', -300)
-      .attr('y', -600)
+      .attr('x', -imageInfo.x)
+      .attr('y', -imageInfo.y)
       .attr('width', 1000)
-      .attr('height', 1500)
-      .attr('xlink:href', 'skeletonImages/' + image)
+      .attr('height', 1000)
+      .attr('xlink:href', 'skeletonImages/' + imageInfo.name)
       .attr('transform', `translate(${ax} ${ay}) scale(${scaleX} ${scaleY}) rotate(${angle})`);
 }
 
@@ -134,13 +139,19 @@ function getAdjacencyImage(name) {
   return 'missing.png';
 }
 
-function getSurfaceImage(name) {
+function getSurfaceImageInfo(name) {
   switch(name) {
-    case 'leftShoulder_rightShoulder_rightHip_leftHip' : return 'torso.png';
-    case 'leftEye_rightEye_rightShoulder_leftShoulder' : return 'head.png';
+    case 'leftShoulder_rightShoulder_rightHip_leftHip' :
+      return {name: 'torso.png', x: 130, y: 195, width: 740, height: 632};
+    case 'leftEye_rightEye_rightShoulder_leftShoulder' :
+      return {name: 'head.png', x: 400, y: 400, width: 300, height: 600};
+    case 'leftEar_leftEye_rightShoulder_leftShoulder' :
+      return {name: 'leftHead.png', x: 460, y: 400, width: 360, height: 600};
+    case 'rightEye_rightEar_rightShoulder_leftShoulder' :
+      return {name: 'rightHead.png', x: 180, y: 400, width: 360, height: 600};
   }
   console.log('missedSurfaceName = ' + name);
-  return 'missing.png';
+  return {name: 'missing.png', x: 300, y: 400, width: 400, height: 533};
 }
 
 /**
@@ -161,20 +172,31 @@ export function drawSkeleton(keypoints, minConfidence, selection, scale = 1) {
  * Draws a surface looking up appropriate quad vertices
  */
 export function drawSurfaces(keypoints, minConfidence, selection, scale = 1) {
-    const surfaceKeyPoints =
-        posenet.getSurfaceKeyPoints(keypoints, minConfidence);
+    const surfaceKeyPoints = posenet.getSurfaceKeyPoints(keypoints, minConfidence);
+    const surfaceImages = surfaceKeyPoints.map(kp => getSurfaceImageInfo(kp[0].part + '_' + kp[1].part + '_' + kp[2].part + '_' + kp[3].part));
 
-    surfaceKeyPoints.forEach((keypoints) => {
-        const imageName = getSurfaceImage(keypoints[0].part + '_' +
-                                           keypoints[1].part + '_' +
-                                           keypoints[2].part + '_' +
-                                           keypoints[3].part);
-        drawSurface( toTuple(keypoints[0].position),
-                     toTuple(keypoints[1].position),
-                     toTuple(keypoints[2].position),
-                     toTuple(keypoints[3].position),
-                     imageName, selection);
+    // torso
+    const torsoIndex = surfaceImages.findIndex(si => si.name.includes('torso'));
+    if(torsoIndex >= 0)
+        drawSurface(surfaceKeyPoints[torsoIndex], surfaceImages[torsoIndex], selection);
+
+    // head
+    let headIndex = -1;
+    let bestHeadDistance = -1;
+    surfaceImages.forEach((si, i) => {
+      const a = toTuple(surfaceKeyPoints[i][0].position);
+      const b = toTuple(surfaceKeyPoints[i][1].position);
+      const dx = a[0] - b[0];
+      const dy = a[1] - b[1];
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if(si.name.includes('ead') && dist > bestHeadDistance) {
+          headIndex = i;
+          bestHeadDistance = dist;
+      }
     });
+    if(headIndex >= 0)
+      drawSurface(surfaceKeyPoints[headIndex], surfaceImages[headIndex], selection);
 }
 
 /**
