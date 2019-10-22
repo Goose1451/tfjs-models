@@ -106,7 +106,7 @@ const guiState = {
     showVideo: true,
     showSkeleton: true,
     showSurfaces: true,
-    showPoints: true,
+    showPoints: false,
     showBoundingBox: false,
   },
   net: null,
@@ -295,6 +295,14 @@ function setupFPS() {
   // TODO - restore if we want to show stats again: document.getElementById('main').appendChild(stats.dom);
 }
 
+function drawVideo(ctx, video) {
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-videoWidth, 0);
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+    ctx.restore();
+}
+
 /**
  * Feeds an image to posenet to estimate poses - this is where the magic
  * happens. This function loops with a requestAnimationFrame method.
@@ -433,10 +441,10 @@ function detectPoseInRealTime(video, net) {
         break;
     }
 
-    ctx.clearRect(0, 0, videoWidth, videoHeight);
     d3.selectAll('.overlay_item').remove();
 
     if (guiState.output.showVideo) {
+      ctx.clearRect(0, 0, videoWidth, videoHeight);
       ctx.save();
       ctx.scale(-1, 1);
       ctx.translate(-videoWidth, 0);
@@ -449,14 +457,14 @@ function detectPoseInRealTime(video, net) {
     // scores
     poses.forEach(({score, keypoints}) => {
       if (score >= minPoseConfidence) {
+        if (guiState.output.showSurfaces) {
+          drawSurfaces(keypoints, minPartConfidence, d3selection);
+        }
         if (guiState.output.showPoints) {
           drawKeypoints(keypoints, minPartConfidence, d3selection);
         }
         if (guiState.output.showSkeleton) {
           drawSkeleton(keypoints, minPartConfidence, d3selection);
-        }
-        if (guiState.output.showSurfaces) {
-          drawSurfaces(keypoints, minPartConfidence, d3selection);
         }
         if (guiState.output.showBoundingBox) {
           drawBoundingBox(keypoints, d3selection);

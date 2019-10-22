@@ -49,8 +49,9 @@ const connectedPartNames: StringTuple[] = [
 ];
 
 const connectedSurfaceNames: StringQuad[] = [
-    ['rightShoulder', 'leftShoulder', 'leftHip', 'rightHip']
-]
+    ['leftShoulder', 'rightShoulder', 'rightHip', 'leftHip'],
+    ['leftEye', 'rightEye', 'rightShoulder', 'leftShoulder']
+];
 
 /*
  * Define the skeleton. This defines the parent->child relationships of our

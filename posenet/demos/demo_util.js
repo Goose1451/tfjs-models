@@ -97,24 +97,26 @@ export function drawSegment([ay, ax], [by, bx], image, selection) {
       .attr('height', 600)
       .attr('xlink:href', 'skeletonImages/' + image)
       .attr('transform', `translate(${ax} ${ay}) scale(${scale}) rotate(${angle})`);
-    /*
-  selection.append('line')
-      .classed('overlay_item', true)
-      .attr('x1', ax)
-      .attr('x2', bx)
-      .attr('y1', ay)
-      .attr('y2', by)
-      .attr('stroke', 'aqua')
-      .attr('stroke-width', 4);*/
 }
 
-export function drawSurface([ay, ax], [by, bx], [cy, cx], [dy, dx], color, scale, selection) {
-  const pathString = `M${ax} ${ay} L${bx} ${by} L ${cx} ${cy} L ${dx} ${dy} L ${ax} ${ay}`;
-  selection.append('path')
+export function drawSurface([ay, ax], [by, bx], [cy, cx], [dy, dx], image, selection) {
+  const nx = (ax + bx) / 2;
+  const ny = (ay + by) / 2;
+  const px = (cx + dx) / 2;
+  const py = (cy + dy) / 2;
+
+  const scaleX = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / 400.0;
+  const scaleY = Math.sqrt((nx - px) * (nx - px) + (ny - py) * (ny - py)) / 800.0;
+  const angle = Math.atan2(by-ay, bx-ax) * 180 / Math.PI;
+
+  selection.append('image')
       .classed('overlay_item', true)
-      .attr('d', pathString)
-      .attr('stroke', 'transparent')
-      .attr('fill', color);
+      .attr('x', -300)
+      .attr('y', -600)
+      .attr('width', 1000)
+      .attr('height', 1500)
+      .attr('xlink:href', 'skeletonImages/' + image)
+      .attr('transform', `translate(${ax} ${ay}) scale(${scaleX} ${scaleY}) rotate(${angle})`);
 }
 
 function getAdjacencyImage(name) {
@@ -134,11 +136,11 @@ function getAdjacencyImage(name) {
 
 function getSurfaceImage(name) {
   switch(name) {
-    case 'rightShoulder_leftShoulder_leftHip_rightHip' : return 'red';
-        'rightShoulder_leftShoulder_leftShoulder_leftShoulder'
+    case 'leftShoulder_rightShoulder_rightHip_leftHip' : return 'torso.png';
+    case 'leftEye_rightEye_rightShoulder_leftShoulder' : return 'head.png';
   }
   console.log('missedSurfaceName = ' + name);
-  return color;
+  return 'missing.png';
 }
 
 /**
@@ -163,7 +165,7 @@ export function drawSurfaces(keypoints, minConfidence, selection, scale = 1) {
         posenet.getSurfaceKeyPoints(keypoints, minConfidence);
 
     surfaceKeyPoints.forEach((keypoints) => {
-        const this_color = getSurfaceImage(keypoints[0].part + '_' +
+        const imageName = getSurfaceImage(keypoints[0].part + '_' +
                                            keypoints[1].part + '_' +
                                            keypoints[2].part + '_' +
                                            keypoints[3].part);
@@ -171,7 +173,7 @@ export function drawSurfaces(keypoints, minConfidence, selection, scale = 1) {
                      toTuple(keypoints[1].position),
                      toTuple(keypoints[2].position),
                      toTuple(keypoints[3].position),
-                     this_color, scale, selection);
+                     imageName, selection);
     });
 }
 
@@ -199,7 +201,6 @@ export function drawKeypoints(keypoints, minConfidence, selection, scale = 1) {
 export function drawBoundingBox(keypoints, selection) {
   const boundingBox = posenet.getBoundingBox(keypoints);
 
-  //<rect x="10" y="10" width="30" height="30" stroke="black" fill="transparent" stroke-width="5"/>
   selection.append('rect')
       .classed('overlay_item', true)
       .attr('x', boundingBox.minX)
@@ -207,7 +208,7 @@ export function drawBoundingBox(keypoints, selection) {
       .attr('width', boundingBox.maxX - boundingBox.minX)
       .attr('height', boundingBox.maxY - boundingBox.minY)
       .attr('stroke', boundingBoxColor)
-      .attr('fill', transparent)
+      .attr('fill', 'transparent')
       .attr('stroke-width', 4);
 }
 
