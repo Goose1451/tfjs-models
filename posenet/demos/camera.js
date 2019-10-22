@@ -312,15 +312,23 @@ function detectPoseInRealTime(video, net) {
   const ctx = canvas.getContext('2d');
   console.log('width = ' + videoWidth);
     console.log('height = ' + videoHeight);
-  const d3selection = d3.select('#output')
+  const svg = d3.select('#output')
     .append('svg')
       .attr('width', "100%")
       .attr('height', "100%")
       .style("position", "absolute")
       .style("top", '0px')
-      .style("left", '0px')
-    .append('g')
+      .style("left", '0px');
+
+  const d3_output = svg.append('g')
       .attr('id', 'd3_output');
+
+  svg.append('image')
+      .attr('id', 'd3_foreground')
+      .attr('width', videoWidth)
+      .attr('height', videoHeight)
+      .attr('xlink:href', 'foreground.png');
+
 
   // since images are being fed from a webcam, we want to feed in the
   // original image and then just flip the keypoints' x coordinates. If instead
@@ -458,16 +466,16 @@ function detectPoseInRealTime(video, net) {
     poses.forEach(({score, keypoints}) => {
       if (score >= minPoseConfidence) {
         if (guiState.output.showSurfaces) {
-          drawSurfaces(keypoints, minPartConfidence, d3selection);
+          drawSurfaces(keypoints, minPartConfidence, d3_output);
         }
         if (guiState.output.showPoints) {
-          drawKeypoints(keypoints, minPartConfidence, d3selection);
+          drawKeypoints(keypoints, minPartConfidence, d3_output);
         }
         if (guiState.output.showSkeleton) {
-          drawSkeleton(keypoints, minPartConfidence, d3selection);
+          drawSkeleton(keypoints, minPartConfidence, d3_output);
         }
         if (guiState.output.showBoundingBox) {
-          drawBoundingBox(keypoints, d3selection);
+          drawBoundingBox(keypoints, d3_output);
         }
       }
     });
