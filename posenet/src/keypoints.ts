@@ -52,6 +52,8 @@ const connectedSurfaceNames: StringQuad[] = [
     ['leftShoulder', 'rightShoulder', 'rightHip', 'leftHip'],
     ['leftEar', 'leftEye', 'rightShoulder', 'leftShoulder'],
     ['rightEye', 'rightEar', 'rightShoulder', 'leftShoulder'],
+    ['leftEar', 'rightEye', 'rightShoulder', 'leftShoulder'],
+    ['leftEye', 'rightEar', 'rightShoulder', 'leftShoulder'],
     ['leftEye', 'rightEye', 'rightShoulder', 'leftShoulder']
 ];
 

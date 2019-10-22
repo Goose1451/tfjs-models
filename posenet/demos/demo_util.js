@@ -105,14 +105,14 @@ export function drawSurface(keypoints, imageInfo, selection) {
   const [cy, cx] = toTuple(keypoints[2].position);
   const [dy, dx] = toTuple(keypoints[3].position);
 
-  const nx = (ax + bx) / 2;
-  const ny = (ay + by) / 2;
-  const px = (cx + dx) / 2;
-  const py = (cy + dy) / 2;
+  const [leftX, leftY] = [bx - ax, by - ay];
+  const [downX, downY] = [(ax + bx - cx - dx) / 2, (ay + by - cy - dy) / 2];
 
-  const scaleX = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / imageInfo.width;
-  const scaleY = Math.sqrt((nx - px) * (nx - px) + (ny - py) * (ny - py)) / imageInfo.height;
-  const angle = Math.atan2(by-ay, bx-ax) * 180 / Math.PI;
+  let scaleX = Math.sqrt(leftX*leftX + leftY*leftY) / imageInfo.width;
+  let scaleY = Math.sqrt(downX*downX + downY*downY) / imageInfo.height;
+  if(leftX * downY > leftY * downX) scaleY *= -1;
+
+  const angle = Math.atan2(leftY, leftX) * 180 / Math.PI;
 
   const surf = selection.append('image')
       .classed('overlay_item', true)
@@ -142,16 +142,20 @@ function getAdjacencyImage(name) {
 function getSurfaceImageInfo(name) {
   switch(name) {
     case 'leftShoulder_rightShoulder_rightHip_leftHip' :
-      return {name: 'torso.png', x: 130, y: 195, width: 740, height: 632};
+      return {name: 'torso.png', x: 130, y: 195, width: 740, height: 632, strength: 0};
     case 'leftEye_rightEye_rightShoulder_leftShoulder' :
-      return {name: 'head.png', x: 400, y: 400, width: 300, height: 600};
+      return {name: 'head.png', x: 400, y: 400, width: 300, height: 600, strength: 1};
     case 'leftEar_leftEye_rightShoulder_leftShoulder' :
-      return {name: 'leftHead.png', x: 460, y: 400, width: 360, height: 600};
+      return {name: 'leftHead.png', x: 460, y: 400, width: 360, height: 600, strength: 0.5};
     case 'rightEye_rightEar_rightShoulder_leftShoulder' :
-      return {name: 'rightHead.png', x: 180, y: 400, width: 360, height: 600};
+      return {name: 'rightHead.png', x: 180, y: 400, width: 360, height: 600, strength: 0.5};
+    case 'leftEar_rightEye_rightShoulder_leftShoulder' :
+        return {name: 'left32Head.png', x: 212, y: 450, width: 450, height: 600, strength: 0.4};
+    case 'leftEye_rightEar_rightShoulder_leftShoulder' :
+        return {name: 'right32Head.png', x: 338, y: 450, width: 450, height: 600, strength: 0.4};
   }
   console.log('missedSurfaceName = ' + name);
-  return {name: 'missing.png', x: 300, y: 400, width: 400, height: 533};
+  return {name: 'missing.png', x: 300, y: 400, width: 400, height: 533, strength: 0};
 }
 
 /**
@@ -182,15 +186,15 @@ export function drawSurfaces(keypoints, minConfidence, selection, scale = 1) {
 
     // head
     let headIndex = -1;
-    let bestHeadDistance = -1;
+    let bestHeadDistance = 0;
     surfaceImages.forEach((si, i) => {
       const a = toTuple(surfaceKeyPoints[i][0].position);
       const b = toTuple(surfaceKeyPoints[i][1].position);
       const dx = a[0] - b[0];
       const dy = a[1] - b[1];
-      const dist = Math.sqrt(dx*dx + dy*dy);
+      const dist = Math.sqrt(dx*dx + dy*dy) * si.strength;
 
-      if(si.name.includes('ead') && dist > bestHeadDistance) {
+      if(dist > bestHeadDistance) {
           headIndex = i;
           bestHeadDistance = dist;
       }
