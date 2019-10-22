@@ -16,13 +16,23 @@
  */
 import * as posenet from '@tensorflow-models/posenet';
 import dat from 'dat.gui';
-import Stats from 'stats.js';
+// import Stats from 'stats.js';
 
-import {drawBoundingBox, drawKeypoints, drawSkeleton, isMobile, toggleLoadingUI, tryResNetButtonName, tryResNetButtonText, updateTryResNetButtonDatGuiCss} from './demo_util';
+import {
+    drawBoundingBox,
+    drawKeypoints,
+    drawSkeleton,
+    drawSurfaces,
+    isMobile,
+    toggleLoadingUI,
+    tryResNetButtonName,
+    tryResNetButtonText,
+    updateTryResNetButtonDatGuiCss
+} from './demo_util';
 
-const videoWidth = 600;
-const videoHeight = 500;
-const stats = new Stats();
+const videoWidth = 1900;
+const videoHeight = 1060;
+// const stats = new Stats();
 
 /**
  * Loads a the camera to be used in the demo
@@ -95,6 +105,7 @@ const guiState = {
   output: {
     showVideo: true,
     showSkeleton: true,
+    showSurfaces: true,
     showPoints: true,
     showBoundingBox: false,
   },
@@ -250,6 +261,7 @@ function setupGui(cameras, net) {
   let output = gui.addFolder('Output');
   output.add(guiState.output, 'showVideo');
   output.add(guiState.output, 'showSkeleton');
+  output.add(guiState.output, 'showSurfaces');
   output.add(guiState.output, 'showPoints');
   output.add(guiState.output, 'showBoundingBox');
   output.open();
@@ -279,8 +291,8 @@ function setupGui(cameras, net) {
  * Sets up a frames per second panel on the top-left of the window
  */
 function setupFPS() {
-  stats.showPanel(0);  // 0: fps, 1: ms, 2: mb, 3+: custom
-  document.getElementById('main').appendChild(stats.dom);
+  // stats.showPanel(0);  // 0: fps, 1: ms, 2: mb, 3+: custom
+  // TODO - restore if we want to show stats again: document.getElementById('main').appendChild(stats.dom);
 }
 
 /**
@@ -288,8 +300,19 @@ function setupFPS() {
  * happens. This function loops with a requestAnimationFrame method.
  */
 function detectPoseInRealTime(video, net) {
-  const canvas = document.getElementById('output');
+  const canvas = document.getElementById('canvas_output');
   const ctx = canvas.getContext('2d');
+  console.log('width = ' + videoWidth);
+    console.log('height = ' + videoHeight);
+  const d3selection = d3.select('#output')
+    .append('svg')
+      .attr('width', "100%")
+      .attr('height', "100%")
+      .style("position", "absolute")
+      .style("top", '0px')
+      .style("left", '0px')
+    .append('g')
+      .attr('id', 'd3_output');
 
   // since images are being fed from a webcam, we want to feed in the
   // original image and then just flip the keypoints' x coordinates. If instead
@@ -380,7 +403,7 @@ function detectPoseInRealTime(video, net) {
     }
 
     // Begin monitoring code for frames per second
-    stats.begin();
+    // stats.begin();
 
     let poses = [];
     let minPoseConfidence;
@@ -411,6 +434,7 @@ function detectPoseInRealTime(video, net) {
     }
 
     ctx.clearRect(0, 0, videoWidth, videoHeight);
+    d3.selectAll('.overlay_item').remove();
 
     if (guiState.output.showVideo) {
       ctx.save();
@@ -426,19 +450,22 @@ function detectPoseInRealTime(video, net) {
     poses.forEach(({score, keypoints}) => {
       if (score >= minPoseConfidence) {
         if (guiState.output.showPoints) {
-          drawKeypoints(keypoints, minPartConfidence, ctx);
+          drawKeypoints(keypoints, minPartConfidence, d3selection);
         }
         if (guiState.output.showSkeleton) {
-          drawSkeleton(keypoints, minPartConfidence, ctx);
+          drawSkeleton(keypoints, minPartConfidence, d3selection);
+        }
+        if (guiState.output.showSurfaces) {
+          drawSurfaces(keypoints, minPartConfidence, d3selection);
         }
         if (guiState.output.showBoundingBox) {
-          drawBoundingBox(keypoints, ctx);
+          drawBoundingBox(keypoints, d3selection);
         }
       }
     });
 
     // End monitoring code for frames per second
-    stats.end();
+    // stats.end();
 
     requestAnimationFrame(poseDetectionFrame);
   }

@@ -17,26 +17,36 @@
 
 import * as tf from '@tensorflow/tfjs-core';
 
-import {connectedPartIndices} from './keypoints';
+import {connectedPartIndices, connectedSurfaceIndices} from './keypoints';
 import {PoseNetOutputStride} from './posenet_model';
 import {InputResolution, Keypoint, Padding, Pose, PosenetInput, TensorBuffer3D, Vector2D} from './types';
-
-function eitherPointDoesntMeetConfidence(
-    a: number, b: number, minConfidence: number): boolean {
-  return (a < minConfidence || b < minConfidence);
-}
 
 export function getAdjacentKeyPoints(
     keypoints: Keypoint[], minConfidence: number): Keypoint[][] {
   return connectedPartIndices.reduce(
       (result: Keypoint[][], [leftJoint, rightJoint]): Keypoint[][] => {
-        if (eitherPointDoesntMeetConfidence(
-                keypoints[leftJoint].score, keypoints[rightJoint].score,
-                minConfidence)) {
+        if (keypoints[leftJoint].score < minConfidence ||
+            keypoints[rightJoint].score < minConfidence) {
           return result;
         }
 
         result.push([keypoints[leftJoint], keypoints[rightJoint]]);
+
+        return result;
+      }, []);
+}
+
+export function getSurfaceKeyPoints(keypoints: Keypoint[], minConfidence: number): Keypoint[][] {
+  return connectedSurfaceIndices.reduce(
+      (result: Keypoint[][], [ptA, ptB, ptC, ptD]): Keypoint[][] => {
+        if (keypoints[ptA].score < minConfidence ||
+            keypoints[ptB].score < minConfidence ||
+            keypoints[ptC].score < minConfidence ||
+            keypoints[ptD].score < minConfidence) {
+          return result;
+        }
+
+        result.push([keypoints[ptA], keypoints[ptB], keypoints[ptC], keypoints[ptD]]);
 
         return result;
       }, []);

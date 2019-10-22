@@ -22,7 +22,7 @@ import {decodeSinglePose} from './single_pose/decode_single_pose';
 export {partChannels, partIds, partNames, poseChain} from './keypoints';
 export {load, ModelConfig, MultiPersonInferenceConfig, PoseNet, PoseNetOutputStride, SinglePersonInterfaceConfig} from './posenet_model';
 export {InputResolution, Keypoint, Pose} from './types';
-export {getAdjacentKeyPoints, getBoundingBox, getBoundingBoxPoints, scaleAndFlipPoses, scalePose} from './util';
+export {getSurfaceKeyPoints, getAdjacentKeyPoints, getBoundingBox, getBoundingBoxPoints, scaleAndFlipPoses, scalePose} from './util';
 export {
   decodeMultiplePoses,
   decodeSinglePose,

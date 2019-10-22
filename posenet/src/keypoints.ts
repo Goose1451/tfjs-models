@@ -19,6 +19,9 @@ export type Tuple<T> = [T, T];
 export type StringTuple = Tuple<string>;
 export type NumberTuple = Tuple<number>;
 
+export type Quad<T> = [T, T, T, T];
+export type StringQuad = Quad<string>;
+
 export const partNames = [
   'nose', 'leftEye', 'rightEye', 'leftEar', 'rightEar', 'leftShoulder',
   'rightShoulder', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist',
@@ -38,13 +41,16 @@ export const partIds =
     }, {}) as NumberDict;
 
 const connectedPartNames: StringTuple[] = [
-  ['leftHip', 'leftShoulder'], ['leftElbow', 'leftShoulder'],
+  ['leftShoulder', 'leftElbow'],
   ['leftElbow', 'leftWrist'], ['leftHip', 'leftKnee'],
-  ['leftKnee', 'leftAnkle'], ['rightHip', 'rightShoulder'],
-  ['rightElbow', 'rightShoulder'], ['rightElbow', 'rightWrist'],
-  ['rightHip', 'rightKnee'], ['rightKnee', 'rightAnkle'],
-  ['leftShoulder', 'rightShoulder'], ['leftHip', 'rightHip']
+  ['leftKnee', 'leftAnkle'],
+  ['rightShoulder', 'rightElbow'], ['rightElbow', 'rightWrist'],
+  ['rightHip', 'rightKnee'], ['rightKnee', 'rightAnkle']
 ];
+
+const connectedSurfaceNames: StringQuad[] = [
+    ['rightShoulder', 'leftShoulder', 'leftHip', 'rightHip']
+]
 
 /*
  * Define the skeleton. This defines the parent->child relationships of our
@@ -62,6 +68,10 @@ export const poseChain: StringTuple[] = [
   ['rightShoulder', 'rightHip'], ['rightHip', 'rightKnee'],
   ['rightKnee', 'rightAnkle']
 ];
+
+export const connectedSurfaceIndices = connectedSurfaceNames.map(
+    ([jointNameA, jointNameB, jointNameC, jointNameD]) =>
+        ([partIds[jointNameA], partIds[jointNameB], partIds[jointNameC], partIds[jointNameD]]));
 
 export const connectedPartIndices = connectedPartNames.map(
     ([jointNameA, jointNameB]) => ([partIds[jointNameA], partIds[jointNameB]]));
