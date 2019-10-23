@@ -86,16 +86,16 @@ export function drawPoint(selection, y, x, r, color) {
 /**
  * Draws a line on a canvas, i.e. a joint
  */
-export function drawSegment([ay, ax], [by, bx], image, selection) {
-  const scale = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / 400.0;
+export function drawSegment([ay, ax], [by, bx], info, selection) {
+  const scale = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) / info.height;
   const angle = Math.atan2(by-ay, bx-ax) * 180 / Math.PI - 90;
   selection.append('image')
       .classed('overlay_item', true)
-      .attr('x', -100)
-      .attr('y', -100)
-      .attr('width', 200)
-      .attr('height', 600)
-      .attr('xlink:href', 'skeletonImages/' + image)
+      .attr('x', -200)
+      .attr('y', -info.y)
+      .attr('width', 400)
+      .attr('height', 1000)
+      .attr('xlink:href', 'skeletonImages/' + info.name)
       .attr('transform', `translate(${ax} ${ay}) scale(${scale}) rotate(${angle})`);
 }
 
@@ -124,16 +124,16 @@ export function drawSurface(keypoints, imageInfo, selection) {
       .attr('transform', `translate(${ax} ${ay}) scale(${scaleX} ${scaleY}) rotate(${angle})`);
 }
 
-function getAdjacencyImage(name) {
+function getAdjacencyImageInfo(name) {
   switch(name) {
-    case 'rightElbow_rightWrist' : return 'rightForearm.png';
-    case 'leftElbow_leftWrist' : return 'leftForearm.png';
-    case 'rightShoulder_rightElbow' : return 'rightBicep.png';
-    case 'leftShoulder_leftElbow' : return 'leftBicep.png';
-    case 'rightHip_rightKnee' : return 'rightThigh.png';
-    case 'leftHip_leftKnee' : return 'leftThigh.png';
-    case 'rightKnee_rightAnkle' : return 'rightShin.png';
-    case 'leftKnee_leftAnkle' : return 'leftShin.png';
+    case 'rightElbow_rightWrist' :    return { name: 'rightForearm.png', y: 40, height: 500};
+    case 'leftElbow_leftWrist' :      return { name:'leftForearm.png', y: 40, height: 500};
+    case 'rightShoulder_rightElbow' : return { name:'rightBicep.png', y: 78, height: 888};
+    case 'leftShoulder_leftElbow' :   return { name:'leftBicep.png', y: 78, height: 888};
+    case 'rightHip_rightKnee' :       return { name:'rightThigh.png', y: 42, height: 918};
+    case 'leftHip_leftKnee' :         return { name:'leftThigh.png', y: 42, height: 918};
+    case 'rightKnee_rightAnkle' :     return { name:'rightShin.png', y: 36, height: 760};
+    case 'leftKnee_leftAnkle' :       return { name:'leftShin.png', y: 36, height: 760};
   }
   console.log('missed adjacency name = ' + name);
   return 'missing.png';
@@ -166,9 +166,9 @@ export function drawSkeleton(keypoints, minConfidence, selection, scale = 1) {
       posenet.getAdjacentKeyPoints(keypoints, minConfidence);
 
   adjacentKeyPoints.forEach((keypoints) => {
-    const imageName = getAdjacencyImage(keypoints[0].part + '_' + keypoints[1].part);
+    const imageInfo = getAdjacencyImageInfo(keypoints[0].part + '_' + keypoints[1].part);
     drawSegment(
-        toTuple(keypoints[0].position), toTuple(keypoints[1].position), imageName, selection);
+        toTuple(keypoints[0].position), toTuple(keypoints[1].position), imageInfo, selection);
   });
 }
 
