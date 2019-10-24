@@ -327,7 +327,7 @@ function detectPoseInRealTime(video, net) {
       .attr('id', 'd3_foreground')
       .attr('width', videoWidth)
       .attr('height', videoHeight)
-      .attr('xlink:href', 'foreground.png');
+      .attr('xlink:href', 'assets/foreground.png');
 
 
   // since images are being fed from a webcam, we want to feed in the

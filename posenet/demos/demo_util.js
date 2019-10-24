@@ -95,7 +95,7 @@ export function drawSegment([ay, ax], [by, bx], info, selection) {
       .attr('y', -info.y)
       .attr('width', 400)
       .attr('height', 1000)
-      .attr('xlink:href', 'skeletonImages/' + info.name)
+      .attr('xlink:href', 'assets/skeletonImages/' + info.name)
       .attr('transform', `translate(${ax} ${ay}) scale(${scale}) rotate(${angle})`);
 }
 
@@ -120,7 +120,7 @@ export function drawSurface(keypoints, imageInfo, selection) {
       .attr('y', -imageInfo.y)
       .attr('width', 1000)
       .attr('height', 1000)
-      .attr('xlink:href', 'skeletonImages/' + imageInfo.name)
+      .attr('xlink:href', 'assets/skeletonImages/' + imageInfo.name)
       .attr('transform', `translate(${ax} ${ay}) scale(${scaleX} ${scaleY}) rotate(${angle})`);
 }
 
