@@ -311,6 +311,10 @@ function drawVideo(ctx, video) {
     ctx.restore();
 }
 
+var msg = new SpeechSynthesisUtterance();
+var count_history = [];
+var prev_avg_count = 0;
+
 /**
  * Feeds an image to posenet to estimate poses - this is where the magic
  * happens. This function loops with a requestAnimationFrame method.
@@ -485,11 +489,13 @@ function detectPoseInRealTime(video, net) {
       ctx.restore();
     }
 
+    var num_skel = 0;
     // For each pose (i.e. person) detected in an image, loop through the poses
     // and draw the resulting skeleton and keypoints if over certain confidence
     // scores
     poses.forEach(({score, keypoints}) => {
       if (score >= minPoseConfidence) {
+    num_skel++;
         if (guiState.output.showSurfaces) {
           drawSurfaces(keypoints, minPartConfidence, d3_output);
         }
@@ -504,6 +510,50 @@ function detectPoseInRealTime(video, net) {
         }
       }
     });
+
+    count_history.unshift(num_skel);
+    if (count_history.length > 60) {
+        count_history.pop();
+    }
+    var avg_count = Math.floor(count_history.reduce((a, b) => a + b, 0) / count_history.length);
+
+    if (avg_count != prev_avg_count && num_skel > 0) {
+        var voices = window.speechSynthesis.getVoices();
+        var en_voices = []
+        voices.forEach((voice) => {
+        if (voice.lang.startsWith("en")) {
+            en_voices.push(voice);
+        }
+        });
+        var voice_num = Math.floor(Math.random() * en_voices.length);
+        msg.voice = en_voices[voice_num];
+        msg.voiceURI = 'native';
+        msg.volume = Math.random() * 1;
+        msg.rate =Math.random() * 0.3;
+        msg.pitch = Math.random() * 0.5;
+        msg.lang = 'en-US';
+
+        var singular_msgs = [];
+        singular_msgs.push("You're all alone!");
+        singular_msgs.push("There's only one of you");
+        singular_msgs.push("One is the loneliest number");
+        singular_msgs.push("Are you lonely?");
+
+        var plural_msgs = [];
+        plural_msgs.push("I see " + num_skel + " dead peepull");
+        plural_msgs.push("There are " + num_skel + " of you");
+        plural_msgs.push("I count " + num_skel + ".");
+        plural_msgs.push("You " + num_skel + " ... join me.");
+        var msgs = plural_msgs;
+        if (num_skel == 1) {
+            msgs = singular_msgs;
+        }
+        var speakNum = Math.floor(Math.random() * msgs.length);
+        msg.text = msgs[speakNum];
+        speechSynthesis.speak(msg);
+    }
+    prev_avg_count = avg_count;
+
 
     // End monitoring code for frames per second
     // stats.end();
