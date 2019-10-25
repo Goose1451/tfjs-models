@@ -77,7 +77,7 @@ const defaultQuantBytes = 2;
 
 const defaultMobileNetMultiplier = isMobile() ? 0.50 : 0.75;
 const defaultMobileNetStride = 16;
-const defaultMobileNetInputResolution = 500;
+const defaultMobileNetInputResolution = 800;
 
 const defaultResNetMultiplier = 1.0;
 const defaultResNetStride = 32;
@@ -109,6 +109,7 @@ const guiState = {
     showPoints: false,
     showBoundingBox: false,
   },
+  showingVideo: true,
   net: null,
 };
 
@@ -285,6 +286,13 @@ function setupGui(cameras, net) {
         break;
     }
   });
+
+  d3.select('body').on('keydown', () => {
+    if (d3.event.key === ' ') {
+      guiState.output.showVideo = !guiState.output.showVideo;
+    }
+  });
+
 }
 
 /**
@@ -314,11 +322,19 @@ function detectPoseInRealTime(video, net) {
     console.log('height = ' + videoHeight);
   const svg = d3.select('#output')
     .append('svg')
+      .attr('id', 'd3_svg')
       .attr('width', "100%")
       .attr('height', "100%")
+      .attr('opacity', 0.0)
       .style("position", "absolute")
       .style("top", '0px')
       .style("left", '0px');
+
+  svg.append('image')
+        .attr('id', 'd3_background')
+        .attr('width', videoWidth)
+        .attr('height', videoHeight)
+        .attr('xlink:href', 'assets/background.png');
 
   const d3_output = svg.append('g')
       .attr('id', 'd3_output');
@@ -447,6 +463,15 @@ function detectPoseInRealTime(video, net) {
         minPoseConfidence = +guiState.multiPoseDetection.minPoseConfidence;
         minPartConfidence = +guiState.multiPoseDetection.minPartConfidence;
         break;
+    }
+
+    const t = d3.transition().duration(3000).ease(d3.easeLinear);
+    if(guiState.output.showVideo && !guiState.showingVideo) {
+      d3.select('#d3_svg').transition(t).attr('opacity', '0.0');
+      guiState.showingVideo = true;
+    } else if(!guiState.output.showVideo && guiState.showingVideo) {
+      d3.select('#d3_svg').transition(t).attr('opacity', '1.0');
+      guiState.showingVideo = false;
     }
 
     d3.selectAll('.overlay_item').remove();
